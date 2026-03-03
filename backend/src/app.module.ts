@@ -36,7 +36,7 @@ import { DailyProgrammingModule } from './modules/daily-programming/daily-progra
                 port: parseInt(config.get('DB_PORT') || '5432'),
                 username: config.get('DB_USERNAME'),
                 password: config.get('DB_PASSWORD'),
-                database: config.get('DB_DATABASE'),
+                database: config.get<string>('DB_DATABASE'),
                 ssl: config.get('DB_SSL') === 'true' ? { rejectUnauthorized: false } : undefined,
               }),
           entities: [__dirname + '/modules/**/*.entity{.ts,.js}'],
