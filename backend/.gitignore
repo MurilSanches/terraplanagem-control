@@ -1,0 +1,20 @@
+# Dependências
+node_modules/
+
+# Build TypeScript compilado
+dist/
+
+# Variáveis de ambiente — NUNCA commitar arquivos .env com valores reais
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# SO
+.DS_Store
+
+# Jest
+coverage/

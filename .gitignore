@@ -1,0 +1,27 @@
+# Dependências
+node_modules/
+
+# Builds
+dist/
+build/
+
+# Variáveis de ambiente — NUNCA commitar arquivos .env com valores reais
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# SO
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Ferramentas locais de desenvolvimento
+.claude/
