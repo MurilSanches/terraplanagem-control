@@ -23,18 +23,29 @@ import { DailyProgrammingModule } from './modules/daily-programming/daily-progra
     ]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get('DB_HOST'),
-        port: parseInt(config.get('DB_PORT') || '5432'),
-        username: config.get('DB_USERNAME'),
-        password: config.get('DB_PASSWORD'),
-        database: config.get('DB_DATABASE'),
-        entities: [__dirname + '/modules/**/*.entity{.ts,.js}'],
-        migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
-        synchronize: config.get('NODE_ENV') === 'development',
-        logging: config.get('NODE_ENV') === 'development',
-      }),
+      useFactory: (config: ConfigService) => {
+        const databaseUrl = config.get<string>('DATABASE_URL');
+        return {
+          type: 'postgres' as const,
+          // DATABASE_URL é injetada automaticamente pela integração Neon+Vercel.
+          // Fallback para variáveis individuais (dev local e VPS).
+          ...(databaseUrl
+            ? { url: databaseUrl, ssl: { rejectUnauthorized: false } }
+            : {
+                host: config.get('DB_HOST'),
+                port: parseInt(config.get('DB_PORT') || '5432'),
+                username: config.get('DB_USERNAME'),
+                password: config.get('DB_PASSWORD'),
+                database: config.get('DB_DATABASE'),
+                ssl: config.get('DB_SSL') === 'true' ? { rejectUnauthorized: false } : undefined,
+              }),
+          entities: [__dirname + '/modules/**/*.entity{.ts,.js}'],
+          migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
+          synchronize: config.get('NODE_ENV') === 'development',
+          logging: config.get('NODE_ENV') === 'development',
+          extra: { max: parseInt(config.get('DB_POOL_MAX') || '10') },
+        };
+      },
       inject: [ConfigService],
     }),
     AuthModule,
