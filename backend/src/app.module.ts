@@ -24,11 +24,10 @@ import { DailyProgrammingModule } from './modules/daily-programming/daily-progra
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => {
-        const databaseUrl = config.get<string>('DATABASE_URL');
+        // DB_DATABASE_URL é a URL do Neon (pooler). Fallback para variáveis individuais (dev local).
+        const databaseUrl = config.get<string>('DB_DATABASE_URL');
         return {
           type: 'postgres' as const,
-          // DATABASE_URL é injetada automaticamente pela integração Neon+Vercel.
-          // Fallback para variáveis individuais (dev local e VPS).
           ...(databaseUrl
             ? { url: databaseUrl, ssl: { rejectUnauthorized: false } }
             : {

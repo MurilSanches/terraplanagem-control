@@ -12,22 +12,45 @@ import { DailyProgramming } from '../../modules/daily-programming/entities/daily
 
 dotenv.config();
 
-const requiredEnv = ['DB_HOST', 'DB_USERNAME', 'DB_PASSWORD', 'DB_DATABASE', 'ADMIN_NAME', 'ADMIN_EMAIL', 'ADMIN_PASSWORD'];
-const missing = requiredEnv.filter((k) => !process.env[k]);
-if (missing.length) {
-  throw new Error(`Variáveis de ambiente obrigatórias não definidas: ${missing.join(', ')}`);
+const requiredAdmin = ['ADMIN_NAME', 'ADMIN_EMAIL', 'ADMIN_PASSWORD'];
+const missingAdmin = requiredAdmin.filter((k) => !process.env[k]);
+if (missingAdmin.length) {
+  throw new Error(`Variáveis de ambiente obrigatórias não definidas: ${missingAdmin.join(', ')}`);
 }
 
-const ds = new DataSource({
-  type: 'postgres',
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT ?? '5432'),
-  username: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-  entities: [User, RefreshToken, EquipmentType, Equipment, Driver, DriverAbsence, WorkSite, DailyProgramming],
-  synchronize: true,
-});
+// Usa URL unpooled para o seed (DDL/synchronize não funciona bem com PgBouncer).
+// Fallback para variáveis individuais no dev local com Docker.
+const databaseUrl = process.env.DB_DATABASE_URL_UNPOOLED || process.env.DB_DATABASE_URL;
+if (!databaseUrl) {
+  const requiredVars = ['DB_HOST', 'DB_USERNAME', 'DB_PASSWORD', 'DB_DATABASE'];
+  const missing = requiredVars.filter((k) => !process.env[k]);
+  if (missing.length) {
+    throw new Error(`Defina DB_DATABASE_URL_UNPOOLED ou as variáveis: ${missing.join(', ')}`);
+  }
+}
+
+const entities = [User, RefreshToken, EquipmentType, Equipment, Driver, DriverAbsence, WorkSite, DailyProgramming];
+
+const ds = new DataSource(
+  databaseUrl
+    ? {
+        type: 'postgres',
+        url: databaseUrl,
+        ssl: { rejectUnauthorized: false },
+        entities,
+        synchronize: true,
+      }
+    : {
+        type: 'postgres',
+        host: process.env.DB_HOST,
+        port: parseInt(process.env.DB_PORT ?? '5432'),
+        username: process.env.DB_USERNAME,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_DATABASE,
+        entities,
+        synchronize: true,
+      },
+);
 
 const EQUIPMENT_TYPES = [
   'Caminhão',
